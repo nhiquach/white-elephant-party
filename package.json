@@ -20,6 +20,6 @@
   "dependencies": {
     "@vercel/kv": "^3.0.0",
     "express": "^5.2.1",
-    "uuid": "^13.0.0"
+    "uuid": "^9.0.1"
   }
 }
