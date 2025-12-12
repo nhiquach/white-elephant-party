@@ -15,7 +15,7 @@
     "gift-exchange"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "@vercel/kv": "^3.0.0",
