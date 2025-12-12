@@ -82,10 +82,35 @@ white-elephant/
 │   ├── index.html
 │   ├── styles.css
 │   └── app.js
+├── scripts/
+│   └── manage-db.js       # Database management CLI
 ├── server.js              # Local Express server
-├── vercel.json
 └── package.json
 ```
+
+## Managing the Production Database
+
+To inspect or clean up parties in your Vercel KV database:
+
+1. Pull your environment variables:
+   ```bash
+   vercel env pull .env.local
+   ```
+
+2. Run the management script:
+   ```bash
+   # List all parties
+   node scripts/manage-db.js list
+
+   # Get details of a specific party
+   node scripts/manage-db.js get <party-id>
+
+   # Delete a specific party
+   node scripts/manage-db.js delete <party-id>
+
+   # Delete ALL parties (with confirmation)
+   node scripts/manage-db.js clear
+   ```
 
 ## How to Play
 
