@@ -231,19 +231,156 @@ header {
   font-size: 12px;
 }
 
-/* Elephant ASCII Art */
-.elephant-art {
-  text-align: center;
+/* Pixel Art Elephant */
+.pixel-elephant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 20px;
+  position: relative;
+  height: 130px;
 }
 
-.elephant-art pre {
-  font-family: monospace;
-  color: var(--text-secondary);
-  font-size: 10px;
-  line-height: 1.2;
-  display: inline-block;
+/* Santa Hat */
+.santa-hat {
+  position: relative;
+  z-index: 2;
 }
+
+.hat-tip {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 16px solid var(--accent-red);
+  margin-left: 30px;
+}
+
+.hat-ball {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: -5px;
+  left: 26px;
+  box-shadow: 0 0 8px white;
+}
+
+.hat-base {
+  width: 50px;
+  height: 20px;
+  background: var(--accent-red);
+  margin-left: 10px;
+  clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+}
+
+.hat-rim {
+  width: 70px;
+  height: 10px;
+  background: white;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(255,255,255,0.5);
+}
+
+/* Elephant Body */
+.elephant-body {
+  position: relative;
+  margin-top: -5px;
+}
+
+.elephant-body .head {
+  width: 60px;
+  height: 50px;
+  background: #8b9dc3;
+  border-radius: 30px 30px 25px 25px;
+  position: relative;
+  box-shadow: inset -5px -5px 0 rgba(0,0,0,0.2);
+}
+
+.elephant-body .ear {
+  width: 25px;
+  height: 35px;
+  background: #8b9dc3;
+  border-radius: 50% 50% 50% 50%;
+  position: absolute;
+  top: 5px;
+  box-shadow: inset -3px -3px 0 rgba(0,0,0,0.2);
+}
+
+.elephant-body .ear.left {
+  left: -18px;
+  transform: rotate(-15deg);
+}
+
+.elephant-body .ear.right {
+  right: -18px;
+  transform: rotate(15deg);
+}
+
+.elephant-body .ear::after {
+  content: '';
+  width: 15px;
+  height: 22px;
+  background: #f4a4ba;
+  border-radius: 50%;
+  position: absolute;
+  top: 6px;
+  left: 5px;
+}
+
+.elephant-body .eye {
+  width: 8px;
+  height: 10px;
+  background: #1a1a2e;
+  border-radius: 50%;
+  position: absolute;
+  top: 15px;
+}
+
+.elephant-body .eye.left {
+  left: 12px;
+}
+
+.elephant-body .eye.right {
+  right: 12px;
+}
+
+.elephant-body .eye::after {
+  content: '';
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+}
+
+.elephant-body .trunk {
+  width: 14px;
+  height: 30px;
+  background: #8b9dc3;
+  border-radius: 0 0 10px 10px;
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: inset -3px 0 0 rgba(0,0,0,0.2);
+}
+
+.elephant-body .trunk::after {
+  content: '';
+  width: 18px;
+  height: 8px;
+  background: #8b9dc3;
+  border-radius: 0 0 8px 8px;
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  box-shadow: inset -3px -2px 0 rgba(0,0,0,0.2);
+}
+
 
 /* Buttons */
 .pixel-btn {
