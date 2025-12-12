@@ -28,6 +28,11 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error creating party:', error);
-    res.status(500).json({ error: 'Failed to create party' });
+    res.status(500).json({
+      error: 'Failed to create party',
+      details: error.message,
+      hasKvUrl: !!process.env.KV_REST_API_URL,
+      hasKvToken: !!process.env.KV_REST_API_TOKEN
+    });
   }
 };
