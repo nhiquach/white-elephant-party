@@ -1,0 +1,25 @@
+{
+  "name": "white-elephant",
+  "version": "1.0.0",
+  "description": "Pixel art White Elephant gift exchange party game",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node server.js",
+    "build": "echo 'No build step required'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "white-elephant",
+    "party-game",
+    "gift-exchange"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@vercel/kv": "^3.0.0",
+    "express": "^5.2.1",
+    "uuid": "^13.0.0"
+  }
+}

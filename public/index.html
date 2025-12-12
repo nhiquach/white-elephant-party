@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>White Elephant Party!</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="snowflakes" aria-hidden="true">
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+    <div class="snowflake">*</div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1 class="title">
+        <span class="pixel-tree">🎄</span>
+        WHITE ELEPHANT
+        <span class="pixel-tree">🎄</span>
+      </h1>
+      <p class="subtitle">Gift Exchange Party</p>
+    </header>
+
+    <!-- User Info Bar (shown when in a party) -->
+    <div id="user-info-bar" class="user-info-bar" style="display: none;">
+      <div class="user-info-left">
+        <span class="user-name-display">
+          <span class="user-icon">🎅</span>
+          <span id="display-player-name">Player</span>
+        </span>
+        <span class="party-badge">
+          <span class="party-icon">🎄</span>
+          Party: <span id="display-party-code">XXXXXXXX</span>
+        </span>
+      </div>
+      <div class="user-info-right">
+        <button id="leave-party-btn" class="pixel-btn small danger">LEAVE PARTY</button>
+      </div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="home-screen" class="screen active">
+      <div class="pixel-box">
+        <div class="elephant-art">
+          <pre>
+           *
+          /!\
+         /___\
+        /     \
+   ____/       \____
+  /    \       /    \
+ |  __  \_____/  __  |
+ | |  |   ___   |  | |
+ | |__|  (o o)  |__| |
+  \      ( ^ )      /
+   \______\_/______/
+          | |
+      ____| |____
+     |___________|
+          </pre>
+        </div>
+        <h2>Welcome!</h2>
+        <div class="button-group">
+          <button id="create-party-btn" class="pixel-btn primary">
+            CREATE PARTY
+          </button>
+          <button id="join-party-btn" class="pixel-btn secondary">
+            JOIN PARTY
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Party Screen -->
+    <div id="create-screen" class="screen">
+      <div class="pixel-box">
+        <h2>Create a Party</h2>
+        <div class="form-group">
+          <label for="host-name">Your Name:</label>
+          <input type="text" id="host-name" class="pixel-input" placeholder="Enter your name..." maxlength="20">
+        </div>
+        <div class="button-group">
+          <button id="start-party-btn" class="pixel-btn primary">
+            START PARTY
+          </button>
+          <button id="back-home-btn" class="pixel-btn secondary">
+            BACK
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Join Party Screen -->
+    <div id="join-screen" class="screen">
+      <div class="pixel-box">
+        <h2>Join a Party</h2>
+        <div class="form-group">
+          <label for="party-code">Party Code:</label>
+          <input type="text" id="party-code" class="pixel-input" placeholder="Enter code..." maxlength="8">
+        </div>
+        <div class="form-group">
+          <label for="player-name">Your Name:</label>
+          <input type="text" id="player-name" class="pixel-input" placeholder="Enter your name..." maxlength="20">
+        </div>
+        <div class="button-group">
+          <button id="join-btn" class="pixel-btn primary">
+            JOIN
+          </button>
+          <button id="back-home-btn-2" class="pixel-btn secondary">
+            BACK
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waiting Room Screen -->
+    <div id="waiting-screen" class="screen">
+      <div class="pixel-box">
+        <h2>Party Lobby</h2>
+        <div class="invite-section">
+          <p>Share this code with friends:</p>
+          <div class="invite-code" id="invite-code">XXXXXXXX</div>
+          <button id="copy-link-btn" class="pixel-btn small">COPY LINK</button>
+        </div>
+        <div class="players-section">
+          <h3>Players (<span id="player-count">0</span>)</h3>
+          <ul id="players-list" class="players-list"></ul>
+        </div>
+        <div id="host-controls" class="host-controls" style="display: none;">
+          <button id="start-registration-btn" class="pixel-btn primary">
+            START GIFT REGISTRATION
+          </button>
+        </div>
+        <p class="waiting-text" id="waiting-text">Waiting for host to start...</p>
+      </div>
+    </div>
+
+    <!-- Gift Registration Screen -->
+    <div id="register-screen" class="screen">
+      <div class="pixel-box">
+        <h2>Register Your Gift</h2>
+        <div class="gift-icon">🎁</div>
+        <div id="gift-registered" style="display: none;">
+          <p class="success-text">Gift registered!</p>
+          <p>Waiting for others...</p>
+          <div class="players-section">
+            <h3>Gift Status</h3>
+            <ul id="gift-status-list" class="players-list"></ul>
+          </div>
+        </div>
+        <div id="gift-form">
+          <div class="form-group">
+            <label for="gift-name">Gift Name:</label>
+            <input type="text" id="gift-name" class="pixel-input" placeholder="Mystery Box..." maxlength="30">
+          </div>
+          <div class="form-group">
+            <label for="gift-desc">Description (optional):</label>
+            <textarea id="gift-desc" class="pixel-input" placeholder="A wonderful surprise..." maxlength="100"></textarea>
+          </div>
+          <button id="register-gift-btn" class="pixel-btn primary">
+            WRAP IT UP!
+          </button>
+        </div>
+        <div id="host-start-game" class="host-controls" style="display: none;">
+          <button id="start-game-btn" class="pixel-btn primary">
+            START THE GAME!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+      <div class="pixel-box game-box">
+        <div id="turn-indicator" class="turn-indicator">
+          <span id="current-player-name">???</span>'s turn!
+        </div>
+
+        <div class="game-area">
+          <div class="gifts-section">
+            <h3>Wrapped Gifts</h3>
+            <div id="wrapped-gifts" class="gifts-grid"></div>
+          </div>
+
+          <div class="gifts-section">
+            <h3>Opened Gifts</h3>
+            <div id="opened-gifts" class="gifts-grid"></div>
+          </div>
+        </div>
+
+        <div id="your-turn-actions" class="turn-actions" style="display: none;">
+          <p class="action-prompt">Choose your action:</p>
+          <div class="action-buttons">
+            <button id="action-open" class="pixel-btn primary">OPEN A GIFT</button>
+            <button id="action-steal" class="pixel-btn secondary">STEAL A GIFT</button>
+          </div>
+        </div>
+
+        <div id="stolen-turn-actions" class="turn-actions" style="display: none;">
+          <p class="action-prompt">Your gift was stolen! Choose:</p>
+          <div class="action-buttons">
+            <button id="stolen-open" class="pixel-btn primary">OPEN A GIFT</button>
+            <button id="stolen-steal" class="pixel-btn secondary">STEAL BACK</button>
+          </div>
+        </div>
+
+        <div class="action-log-section">
+          <h3>Action Log</h3>
+          <div id="action-log" class="action-log"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="screen">
+      <div class="pixel-box">
+        <h2>Game Over!</h2>
+        <div class="confetti">🎉 🎊 🎁 🎄 ⭐ 🎉 🎊 🎁</div>
+        <div class="results-section">
+          <h3>Final Results</h3>
+          <ul id="results-list" class="results-list"></ul>
+        </div>
+        <div class="action-log-section">
+          <h3>Game History</h3>
+          <div id="final-action-log" class="action-log"></div>
+        </div>
+        <button id="new-party-btn" class="pixel-btn primary">
+          NEW PARTY
+        </button>
+      </div>
+    </div>
+
+    <!-- Gift Selection Modal -->
+    <div id="gift-modal" class="modal" style="display: none;">
+      <div class="modal-content pixel-box">
+        <h3 id="modal-title">Select a Gift</h3>
+        <div id="modal-gifts" class="gifts-grid"></div>
+        <button id="modal-cancel" class="pixel-btn secondary">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
