@@ -22,6 +22,18 @@
   </div>
 
   <div class="container">
+    <!-- Music Toggle (fixed position) -->
+    <button id="music-toggle" class="music-toggle" aria-label="Toggle 8-bit Christmas music">
+      <span class="music-icon">🎵</span>
+      <span class="music-status">OFF</span>
+    </button>
+
+    <!-- 8-bit Christmas Background Music -->
+    <audio id="christmas-music" loop preload="auto">
+      <source src="music/8bit-christmas.mp3" type="audio/mpeg">
+      <source src="music/8bit-christmas.ogg" type="audio/ogg">
+    </audio>
+
     <header>
       <h1 class="title">
         <span class="pixel-tree">🎄</span>
@@ -248,6 +260,10 @@
       </div>
     </div>
   </div>
+
+  <footer class="attribution">
+    Music: "Jingle Bells 8Bit" by <a href="https://timbeek.com" target="_blank" rel="noopener">Tim Beek</a>
+  </footer>
 
   <script src="app.js"></script>
 </body>

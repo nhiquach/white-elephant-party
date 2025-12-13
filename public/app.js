@@ -9,6 +9,7 @@ let party = null;
 let selectingGiftFor = null; // 'open' or 'steal'
 let pollInterval = null;
 let lastUpdated = 0;
+let isMusicPlaying = false;
 
 // DOM Elements
 const screens = {
@@ -23,6 +24,8 @@ const screens = {
 
 const modal = document.getElementById('gift-modal');
 const userInfoBar = document.getElementById('user-info-bar');
+const christmasMusic = document.getElementById('christmas-music');
+const musicToggle = document.getElementById('music-toggle');
 
 // Initialize
 function init() {
@@ -43,6 +46,9 @@ function init() {
     isHost = session.isHost;
     rejoinParty();
   }
+
+  // Initialize music state from localStorage
+  initMusic();
 
   setupEventListeners();
 }
@@ -88,6 +94,9 @@ function setupEventListeners() {
       leaveParty();
     }
   });
+
+  // Music toggle
+  musicToggle.addEventListener('click', toggleMusic);
 }
 
 // Leave party and go home
@@ -103,6 +112,51 @@ function leaveParty() {
   showScreen('home');
   // Clear URL params
   window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// Music Functions
+function initMusic() {
+  const savedMusicState = localStorage.getItem('whiteElephantMusic');
+  if (savedMusicState === 'playing') {
+    // Try to auto-play if user previously had music on
+    // Note: Most browsers block autoplay, so we just set the visual state
+    // and the music will start on first user interaction
+    updateMusicUI(true);
+    isMusicPlaying = true;
+    // Attempt to play (may be blocked by browser)
+    christmasMusic.play().catch(() => {
+      // Autoplay blocked, will play on next toggle
+    });
+  }
+}
+
+function toggleMusic() {
+  if (isMusicPlaying) {
+    christmasMusic.pause();
+    isMusicPlaying = false;
+    localStorage.setItem('whiteElephantMusic', 'paused');
+    updateMusicUI(false);
+  } else {
+    christmasMusic.play().then(() => {
+      isMusicPlaying = true;
+      localStorage.setItem('whiteElephantMusic', 'playing');
+      updateMusicUI(true);
+    }).catch((error) => {
+      console.log('Music playback failed:', error);
+      updateMusicUI(false);
+    });
+  }
+}
+
+function updateMusicUI(isPlaying) {
+  const statusText = musicToggle.querySelector('.music-status');
+  if (isPlaying) {
+    musicToggle.classList.add('playing');
+    statusText.textContent = 'ON';
+  } else {
+    musicToggle.classList.remove('playing');
+    statusText.textContent = 'OFF';
+  }
 }
 
 // User Info Bar functions
