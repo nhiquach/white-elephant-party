@@ -118,14 +118,13 @@ function leaveParty() {
 function initMusic() {
   const savedMusicState = localStorage.getItem('whiteElephantMusic');
   if (savedMusicState === 'playing') {
-    // Try to auto-play if user previously had music on
-    // Note: Most browsers block autoplay, so we just set the visual state
-    // and the music will start on first user interaction
     updateMusicUI(true);
     isMusicPlaying = true;
     // Attempt to play (may be blocked by browser)
     christmasMusic.play().catch(() => {
-      // Autoplay blocked, will play on next toggle
+      // Autoplay blocked - reset state to match reality
+      isMusicPlaying = false;
+      updateMusicUI(false);
     });
   }
 }
