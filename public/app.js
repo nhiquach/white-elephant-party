@@ -69,6 +69,10 @@ function setupEventListeners() {
   // Waiting screen
   document.getElementById('copy-link-btn').addEventListener('click', copyInviteLink);
   document.getElementById('start-registration-btn').addEventListener('click', startRegistration);
+  document.getElementById('final-swap-allow-locked').addEventListener('change', updateSettings);
+
+  // Initialize custom dropdowns
+  initPixelDropdowns();
 
   // Register screen
   document.getElementById('register-gift-btn').addEventListener('click', registerGift);
@@ -79,6 +83,15 @@ function setupEventListeners() {
   document.getElementById('action-steal').addEventListener('click', () => showGiftSelection('steal'));
   document.getElementById('stolen-open').addEventListener('click', () => showGiftSelection('open'));
   document.getElementById('stolen-steal').addEventListener('click', () => showGiftSelection('steal'));
+  // Final round - swap variant
+  document.getElementById('final-keep-swap').addEventListener('click', keepGift);
+  document.getElementById('final-swap').addEventListener('click', () => showGiftSelection('swap'));
+  // Final round - chain variant
+  document.getElementById('final-keep-chain').addEventListener('click', keepGift);
+  document.getElementById('final-steal-chain').addEventListener('click', () => showGiftSelection('steal'));
+  // Chain stolen actions
+  document.getElementById('chain-keep').addEventListener('click', keepGift);
+  document.getElementById('chain-steal').addEventListener('click', () => showGiftSelection('steal'));
 
   // Modal
   document.getElementById('modal-cancel').addEventListener('click', () => hideModal());
@@ -156,6 +169,86 @@ function updateMusicUI(isPlaying) {
     musicToggle.classList.remove('playing');
     statusText.textContent = 'OFF';
   }
+}
+
+// Custom Pixel Dropdown Functions
+function initPixelDropdowns() {
+  const dropdowns = document.querySelectorAll('.pixel-dropdown');
+
+  dropdowns.forEach(dropdown => {
+    const selected = dropdown.querySelector('.pixel-dropdown-selected');
+    const options = dropdown.querySelectorAll('.pixel-dropdown-option');
+
+    // Toggle dropdown on click
+    selected.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Close other dropdowns
+      dropdowns.forEach(d => {
+        if (d !== dropdown) d.classList.remove('open');
+      });
+      dropdown.classList.toggle('open');
+    });
+
+    // Handle option selection
+    options.forEach(option => {
+      option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const value = option.dataset.value;
+        const text = option.textContent.replace('> ', '');
+
+        // Update selected display
+        selected.textContent = text;
+        dropdown.dataset.value = value;
+
+        // Update selected state
+        options.forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+
+        // Close dropdown
+        dropdown.classList.remove('open');
+
+        // Trigger change callback
+        handleDropdownChange(dropdown.id, value);
+      });
+    });
+  });
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', () => {
+    dropdowns.forEach(d => d.classList.remove('open'));
+  });
+}
+
+function handleDropdownChange(dropdownId, value) {
+  if (dropdownId === 'max-steals-dropdown' || dropdownId === 'final-round-dropdown') {
+    updateSettings();
+  }
+
+  if (dropdownId === 'final-round-dropdown') {
+    document.getElementById('swap-options').style.display = value === 'swap' ? 'block' : 'none';
+  }
+}
+
+function setDropdownValue(dropdownId, value) {
+  const dropdown = document.getElementById(dropdownId);
+  if (!dropdown) return;
+
+  const options = dropdown.querySelectorAll('.pixel-dropdown-option');
+  const selected = dropdown.querySelector('.pixel-dropdown-selected');
+
+  options.forEach(option => {
+    if (option.dataset.value === String(value)) {
+      selected.textContent = option.textContent.replace('> ', '');
+      dropdown.dataset.value = value;
+      options.forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+    }
+  });
+}
+
+function getDropdownValue(dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  return dropdown ? dropdown.dataset.value : null;
 }
 
 // User Info Bar functions
@@ -343,6 +436,30 @@ function navigateToCurrentState() {
   }
 }
 
+async function updateSettings() {
+  const maxSteals = parseInt(getDropdownValue('max-steals-dropdown')) || 3;
+  const finalRoundType = getDropdownValue('final-round-dropdown') || 'none';
+  const finalSwapAllowLocked = document.getElementById('final-swap-allow-locked').checked;
+  try {
+    const response = await fetch(`/api/party/${currentPartyId}/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hostId: currentPlayerId, maxSteals, finalRoundType, finalSwapAllowLocked }),
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    party = data;
+    lastUpdated = data.lastUpdated || 0;
+  } catch (error) {
+    console.error('Error updating settings:', error);
+  }
+}
+
 async function startRegistration() {
   try {
     const response = await fetch(`/api/party/${currentPartyId}/register`, {
@@ -469,6 +586,52 @@ async function stealGift(giftId) {
   }
 }
 
+async function keepGift() {
+  try {
+    const response = await fetch(`/api/party/${currentPartyId}/keep`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId: currentPlayerId }),
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    party = data;
+    lastUpdated = data.lastUpdated || 0;
+    navigateToCurrentState();
+  } catch (error) {
+    console.error('Error keeping gift:', error);
+  }
+}
+
+async function swapGift(giftId) {
+  try {
+    const response = await fetch(`/api/party/${currentPartyId}/swap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId: currentPlayerId, giftId }),
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      alert(data.error);
+      hideModal();
+      return;
+    }
+
+    party = data;
+    lastUpdated = data.lastUpdated || 0;
+    hideModal();
+    navigateToCurrentState();
+  } catch (error) {
+    console.error('Error swapping gift:', error);
+  }
+}
+
 // UI Update Functions
 function handlePartyUpdate(updatedParty) {
   party = updatedParty;
@@ -493,6 +656,12 @@ function updateWaitingScreen() {
   if (isHost) {
     hostControls.style.display = 'block';
     waitingText.style.display = 'none';
+    // Sync settings from party data
+    setDropdownValue('max-steals-dropdown', party.maxSteals || 3);
+    setDropdownValue('final-round-dropdown', party.finalRoundType || 'none');
+    document.getElementById('final-swap-allow-locked').checked = party.finalSwapAllowLocked || false;
+    // Show/hide swap options
+    document.getElementById('swap-options').style.display = party.finalRoundType === 'swap' ? 'block' : 'none';
   } else {
     hostControls.style.display = 'none';
     waitingText.style.display = 'block';
@@ -537,11 +706,11 @@ function updateGameScreen() {
   const isMyTurn = party.currentPlayerId === currentPlayerId;
   const currentPlayer = party.players.find(p => p.id === currentPlayerId);
 
-  // Check if the last action was someone stealing FROM this player
+  // Check if the last action was someone stealing/trading FROM this player
   const lastAction = party.actions.length > 0 ? party.actions[party.actions.length - 1] : null;
   const wasJustStolen = isMyTurn &&
     lastAction &&
-    lastAction.type === 'stolen' &&
+    (lastAction.type === 'stolen' || lastAction.type === 'traded') &&
     lastAction.fromPlayerId === currentPlayerId;
 
   // Update turn indicator
@@ -586,19 +755,68 @@ function updateGameScreen() {
   // Update turn actions
   const yourTurnActions = document.getElementById('your-turn-actions');
   const stolenTurnActions = document.getElementById('stolen-turn-actions');
+  const finalRoundSwapActions = document.getElementById('final-round-swap-actions');
+  const finalRoundChainActions = document.getElementById('final-round-chain-actions');
+  const chainStolenActions = document.getElementById('chain-stolen-actions');
 
   yourTurnActions.style.display = 'none';
   stolenTurnActions.style.display = 'none';
+  finalRoundSwapActions.style.display = 'none';
+  finalRoundChainActions.style.display = 'none';
+  chainStolenActions.style.display = 'none';
 
   if (isMyTurn) {
-    if (wasJustStolen) {
+    // Check if we're in the final round
+    if (party.inFinalRound) {
+      const isFirstPlayer = party.turnOrder[0] === party.players.find(p => p.id === currentPlayerId)?.name ||
+                           party.turnOrder.indexOf(party.players.find(p => p.id === currentPlayerId)?.name) === 0;
+
+      if (party.finalRoundType === 'swap') {
+        finalRoundSwapActions.style.display = 'block';
+        // Check if there are gifts to swap (consider finalSwapAllowLocked)
+        const canSwap = party.gifts.some(g =>
+          g.opened &&
+          g.currentHolder !== currentPlayerId &&
+          (party.finalSwapAllowLocked || g.stealCount < party.maxSteals)
+        );
+        document.getElementById('final-swap').disabled = !canSwap;
+      } else if (party.finalRoundType === 'chain') {
+        // Check if this is the first player starting the chain or someone in the chain
+        // The first player is the one at turnOrder[0], and they only see the "start chain" UI
+        // if no trades have happened yet in the final round
+        const firstPlayerId = party.players.find(p => p.name === party.turnOrder[0])?.id;
+        const isFirstPlayer = currentPlayerId === firstPlayerId;
+        const hasTradedInFinalRound = party.actions.some(a => a.type === 'traded');
+
+        if (isFirstPlayer && !hasTradedInFinalRound) {
+          // First player starting the chain (no trades yet)
+          finalRoundChainActions.style.display = 'block';
+          const canSteal = party.gifts.some(g =>
+            g.opened &&
+            g.currentHolder !== currentPlayerId &&
+            g.stealCount < party.maxSteals
+          );
+          document.getElementById('final-steal-chain').disabled = !canSteal;
+        } else {
+          // Someone in the chain whose gift was traded away
+          chainStolenActions.style.display = 'block';
+          const canSteal = party.gifts.some(g =>
+            g.opened &&
+            g.currentHolder !== currentPlayerId &&
+            g.stealCount < party.maxSteals &&
+            g.id !== party.lastStolenGiftId
+          );
+          document.getElementById('chain-steal').disabled = !canSteal;
+        }
+      }
+    } else if (wasJustStolen) {
       stolenTurnActions.style.display = 'block';
       // Disable steal back if the stolen gift can't be stolen
       const stolenStealBtn = document.getElementById('stolen-steal');
       const canStealAny = party.gifts.some(g =>
         g.opened &&
         g.currentHolder !== currentPlayerId &&
-        g.stealCount < g.maxSteals &&
+        g.stealCount < party.maxSteals &&
         g.id !== party.lastStolenGiftId
       );
       stolenStealBtn.disabled = !canStealAny;
@@ -608,7 +826,7 @@ function updateGameScreen() {
       const canSteal = party.gifts.some(g =>
         g.opened &&
         g.currentHolder !== currentPlayerId &&
-        g.stealCount < g.maxSteals
+        g.stealCount < party.maxSteals
       );
       document.getElementById('action-steal').disabled = !canSteal;
     }
@@ -630,6 +848,15 @@ function updateActionLog(elementId) {
         return `<div class="action action-open">${action.playerName} opened "${action.giftName}"!</div>`;
       case 'stolen':
         return `<div class="action action-steal">${action.playerName} stole "${action.giftName}" from ${action.fromPlayerName}!</div>`;
+      case 'traded':
+        return `<div class="action action-swap">${action.playerName} traded "${action.givenGiftName || 'their gift'}" for "${action.giftName}" with ${action.fromPlayerName}!</div>`;
+      case 'final_round':
+        const roundType = action.finalRoundType === 'swap' ? 'swap' : 'trade';
+        return `<div class="action action-final">FINAL ROUND! ${action.playerName} gets one last chance to ${roundType}!</div>`;
+      case 'kept':
+        return `<div class="action action-keep">${action.playerName} decided to keep "${action.giftName}"!</div>`;
+      case 'swapped':
+        return `<div class="action action-swap">${action.playerName} swapped "${action.givenGiftName || 'their gift'}" for "${action.giftName}" with ${action.fromPlayerName}!</div>`;
       case 'game_ended':
         return `<div class="action action-start">Game over!</div>`;
       default:
@@ -671,17 +898,38 @@ function showGiftSelection(type) {
         <div class="gift-name">Mystery Gift</div>
       </div>
     `).join('');
+  } else if (type === 'swap') {
+    modalTitle.textContent = 'Choose a Gift to Swap For';
+    const swappableGifts = party.gifts.filter(g =>
+      g.opened &&
+      g.currentHolder !== currentPlayerId &&
+      (party.finalSwapAllowLocked || g.stealCount < party.maxSteals)
+    );
+    modalGifts.innerHTML = swappableGifts.map(g => {
+      const isLocked = g.stealCount >= party.maxSteals;
+      return `
+        <div class="gift-card opened ${isLocked ? 'locked' : ''}" onclick="selectGift('${g.id}')">
+          <span class="steal-count">${g.stealCount}/${party.maxSteals}</span>
+          <div class="gift-emoji">🎁</div>
+          <div class="gift-name">${g.name}</div>
+          ${g.description ? `<div class="gift-desc">${g.description}</div>` : ''}
+          <div class="gift-holder">${g.currentHolderName}</div>
+        </div>
+      `;
+    }).join('');
   } else {
-    modalTitle.textContent = 'Choose a Gift to Steal';
+    // Use "Trade" for final round, "Steal" otherwise
+    const actionWord = party.inFinalRound ? 'Trade' : 'Steal';
+    modalTitle.textContent = `Choose a Gift to ${actionWord}`;
     const stealableGifts = party.gifts.filter(g =>
       g.opened &&
       g.currentHolder !== currentPlayerId &&
-      g.stealCount < g.maxSteals &&
+      g.stealCount < party.maxSteals &&
       g.id !== party.lastStolenGiftId
     );
     modalGifts.innerHTML = stealableGifts.map(g => `
       <div class="gift-card opened" onclick="selectGift('${g.id}')">
-        <span class="steal-count">${g.stealCount}/${g.maxSteals}</span>
+        <span class="steal-count">${g.stealCount}/${party.maxSteals}</span>
         <div class="gift-emoji">🎁</div>
         <div class="gift-name">${g.name}</div>
         ${g.description ? `<div class="gift-desc">${g.description}</div>` : ''}
@@ -696,6 +944,8 @@ function showGiftSelection(type) {
 window.selectGift = function(giftId) {
   if (selectingGiftFor === 'open') {
     openGift(giftId);
+  } else if (selectingGiftFor === 'swap') {
+    swapGift(giftId);
   } else {
     stealGift(giftId);
   }

@@ -148,6 +148,39 @@
           <ul id="players-list" class="players-list"></ul>
         </div>
         <div id="host-controls" class="host-controls" style="display: none;">
+          <div class="settings-section">
+            <h4>Game Settings</h4>
+            <div class="setting-row">
+              <label>Max steals per gift:</label>
+              <div class="pixel-dropdown" id="max-steals-dropdown" data-value="3">
+                <div class="pixel-dropdown-selected">3</div>
+                <div class="pixel-dropdown-options">
+                  <div class="pixel-dropdown-option" data-value="1">1</div>
+                  <div class="pixel-dropdown-option" data-value="2">2</div>
+                  <div class="pixel-dropdown-option selected" data-value="3">3</div>
+                  <div class="pixel-dropdown-option" data-value="4">4</div>
+                  <div class="pixel-dropdown-option" data-value="5">5</div>
+                </div>
+              </div>
+            </div>
+            <div class="setting-row">
+              <label>Final round:</label>
+              <div class="pixel-dropdown" id="final-round-dropdown" data-value="none">
+                <div class="pixel-dropdown-selected">None</div>
+                <div class="pixel-dropdown-options">
+                  <div class="pixel-dropdown-option selected" data-value="none">None</div>
+                  <div class="pixel-dropdown-option" data-value="swap">Swap - First player trades once</div>
+                  <div class="pixel-dropdown-option" data-value="chain">Chain - First player starts steal chain</div>
+                </div>
+              </div>
+            </div>
+            <div id="swap-options" class="setting-row sub-option" style="display: none;">
+              <label class="toggle-label">
+                <input type="checkbox" id="final-swap-allow-locked">
+                <span class="toggle-text">Allow swapping locked gifts</span>
+              </label>
+            </div>
+          </div>
           <button id="start-registration-btn" class="pixel-btn primary">
             START GIFT REGISTRATION
           </button>
@@ -222,6 +255,30 @@
           <div class="action-buttons">
             <button id="stolen-open" class="pixel-btn primary">OPEN A GIFT</button>
             <button id="stolen-steal" class="pixel-btn secondary">STEAL BACK</button>
+          </div>
+        </div>
+
+        <div id="final-round-swap-actions" class="turn-actions" style="display: none;">
+          <p class="action-prompt final-round-prompt">FINAL ROUND! You went first, so you get to swap with anyone:</p>
+          <div class="action-buttons">
+            <button id="final-keep-swap" class="pixel-btn primary">KEEP MY GIFT</button>
+            <button id="final-swap" class="pixel-btn secondary">SWAP A GIFT</button>
+          </div>
+        </div>
+
+        <div id="final-round-chain-actions" class="turn-actions" style="display: none;">
+          <p class="action-prompt final-round-prompt">FINAL ROUND! Keep your gift or start a trade chain:</p>
+          <div class="action-buttons">
+            <button id="final-keep-chain" class="pixel-btn primary">KEEP MY GIFT</button>
+            <button id="final-steal-chain" class="pixel-btn secondary">TRADE A GIFT</button>
+          </div>
+        </div>
+
+        <div id="chain-stolen-actions" class="turn-actions" style="display: none;">
+          <p class="action-prompt">Your gift was traded away! Keep your new gift or trade:</p>
+          <div class="action-buttons">
+            <button id="chain-keep" class="pixel-btn primary">KEEP MY GIFT</button>
+            <button id="chain-steal" class="pixel-btn secondary">TRADE A GIFT</button>
           </div>
         </div>
 

@@ -28,8 +28,8 @@ async function getParty(partyId) {
 async function setParty(partyId, party) {
   if (isProduction() && kv) {
     try {
-      // Set with 24 hour expiry
-      await kv.set(`party:${partyId}`, party, { ex: 86400 });
+      // Set with 3 day expiry
+      await kv.set(`party:${partyId}`, party, { ex: 259200 });
     } catch (error) {
       console.error('KV set error:', error.message);
       throw error;

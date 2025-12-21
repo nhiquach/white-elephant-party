@@ -41,6 +41,9 @@ function createParty(hostName) {
     stealCount: {},
     maxSteals: 3,
     lastStolenGiftId: null,
+    finalRoundType: 'none', // 'none', 'swap', 'chain'
+    finalSwapAllowLocked: false,
+    inFinalRound: false,
     lastUpdated: Date.now(),
   };
 
@@ -97,6 +100,24 @@ function registerGift(partyId, playerId, giftName, giftDescription) {
   party.lastUpdated = Date.now();
 
   return gift;
+}
+
+function updateSettings(partyId, hostId, settings) {
+  const party = getParty(partyId);
+  if (!party || party.hostId !== hostId) return null;
+  if (party.state !== 'waiting') return null; // Only allow in waiting state
+
+  if (settings.finalRoundType !== undefined) {
+    party.finalRoundType = settings.finalRoundType;
+  }
+  if (settings.finalSwapAllowLocked !== undefined) {
+    party.finalSwapAllowLocked = settings.finalSwapAllowLocked;
+  }
+  if (settings.maxSteals !== undefined) {
+    party.maxSteals = Math.max(1, Math.min(10, parseInt(settings.maxSteals) || 3));
+  }
+  party.lastUpdated = Date.now();
+  return party;
 }
 
 function startGame(partyId, hostId) {
@@ -165,8 +186,15 @@ function stealGift(partyId, playerId, giftId) {
   if (party.stealCount[giftId] >= party.maxSteals) return null;
 
   const previousHolder = party.players.find(p => p.id === gift.currentHolder);
+  const playerCurrentGift = party.gifts.find(g => g.id === player.currentGift);
 
-  if (previousHolder) {
+  // In final round, steals are actually swaps (everyone must keep a gift)
+  if (party.inFinalRound && previousHolder && playerCurrentGift) {
+    // Give the stealer's current gift to the previous holder
+    previousHolder.currentGift = playerCurrentGift.id;
+    playerCurrentGift.currentHolder = previousHolder.id;
+    playerCurrentGift.currentHolderName = previousHolder.name;
+  } else if (previousHolder) {
     previousHolder.currentGift = null;
   }
 
@@ -177,7 +205,7 @@ function stealGift(partyId, playerId, giftId) {
   party.lastStolenGiftId = giftId;
 
   party.actions.push({
-    type: 'stolen',
+    type: party.inFinalRound ? 'traded' : 'stolen',
     timestamp: Date.now(),
     playerId: playerId,
     playerName: player.name,
@@ -185,7 +213,25 @@ function stealGift(partyId, playerId, giftId) {
     giftName: gift.name,
     fromPlayerId: previousHolder?.id,
     fromPlayerName: previousHolder?.name,
+    givenGiftName: party.inFinalRound ? playerCurrentGift?.name : undefined,
   });
+
+  // Handle final round based on type
+  if (party.inFinalRound) {
+    if (party.finalRoundType === 'swap') {
+      // Swap variant: end game immediately
+      endGame(party);
+    } else if (party.finalRoundType === 'chain') {
+      // Chain variant: traded-from player gets to trade or keep
+      if (previousHolder) {
+        party.currentPlayerId = previousHolder.id;
+      } else {
+        endGame(party);
+      }
+    }
+    party.lastUpdated = Date.now();
+    return party;
+  }
 
   if (previousHolder) {
     party.currentPlayerId = previousHolder.id;
@@ -195,11 +241,93 @@ function stealGift(partyId, playerId, giftId) {
   return party;
 }
 
+function keepGift(partyId, playerId) {
+  const party = getParty(partyId);
+  if (!party || party.state !== 'playing') return null;
+  if (!party.inFinalRound) return null; // Only allowed in final round
+  if (party.currentPlayerId !== playerId) return null;
+
+  const player = party.players.find(p => p.id === playerId);
+  if (!player) return null;
+
+  party.actions.push({
+    type: 'kept',
+    timestamp: Date.now(),
+    playerId: playerId,
+    playerName: player.name,
+    giftName: party.gifts.find(g => g.id === player.currentGift)?.name || 'their gift',
+  });
+
+  endGame(party);
+  return party;
+}
+
+function swapGift(partyId, playerId, giftId) {
+  const party = getParty(partyId);
+  if (!party || party.state !== 'playing') return null;
+  if (!party.inFinalRound || party.finalRoundType !== 'swap') return null;
+  if (party.currentPlayerId !== playerId) return null;
+
+  const gift = party.gifts.find(g => g.id === giftId);
+  const player = party.players.find(p => p.id === playerId);
+  if (!gift || !player) return null;
+  if (!gift.opened) return null;
+  if (gift.currentHolder === playerId) return null;
+
+  // Check if swap is allowed (locked gifts only allowed if finalSwapAllowLocked)
+  if (!party.finalSwapAllowLocked && party.stealCount[giftId] >= party.maxSteals) {
+    return null;
+  }
+
+  const previousHolder = party.players.find(p => p.id === gift.currentHolder);
+  const playerCurrentGift = party.gifts.find(g => g.id === player.currentGift);
+
+  // Swap the gifts
+  if (previousHolder && playerCurrentGift) {
+    previousHolder.currentGift = playerCurrentGift.id;
+    playerCurrentGift.currentHolder = previousHolder.id;
+    playerCurrentGift.currentHolderName = previousHolder.name;
+  }
+
+  gift.currentHolder = playerId;
+  gift.currentHolderName = player.name;
+  player.currentGift = giftId;
+
+  party.actions.push({
+    type: 'swapped',
+    timestamp: Date.now(),
+    playerId: playerId,
+    playerName: player.name,
+    giftId: giftId,
+    giftName: gift.name,
+    fromPlayerId: previousHolder?.id,
+    fromPlayerName: previousHolder?.name,
+    givenGiftName: playerCurrentGift?.name,
+  });
+
+  endGame(party);
+  party.lastUpdated = Date.now();
+  return party;
+}
+
 function advanceTurn(party) {
   party.currentTurnIndex++;
 
   const unopenedGifts = party.gifts.filter(g => !g.opened);
   if (unopenedGifts.length === 0) {
+    // Check if final round is enabled and not yet done
+    if (party.finalRoundType !== 'none' && !party.inFinalRound) {
+      party.inFinalRound = true;
+      party.currentPlayerId = party.turnOrder[0]; // First player gets final turn
+      party.lastStolenGiftId = null; // Reset steal restriction for final round
+      party.actions.push({
+        type: 'final_round',
+        timestamp: Date.now(),
+        playerName: party.players.find(p => p.id === party.turnOrder[0]).name,
+        finalRoundType: party.finalRoundType,
+      });
+      return; // Don't end game yet
+    }
     endGame(party);
     return;
   }
@@ -273,6 +401,10 @@ function sanitizeParty(party) {
     turnOrder: party.turnOrder.map(id => party.players.find(p => p.id === id)?.name || ''),
     actions: party.actions,
     lastStolenGiftId: party.lastStolenGiftId,
+    finalRoundType: party.finalRoundType,
+    finalSwapAllowLocked: party.finalSwapAllowLocked,
+    inFinalRound: party.inFinalRound,
+    maxSteals: party.maxSteals,
     lastUpdated: party.lastUpdated,
   };
 }
@@ -352,6 +484,33 @@ app.post('/api/party/:partyId/register', (req, res) => {
   }
   party.state = 'registering';
   party.lastUpdated = Date.now();
+  res.json(sanitizeParty(party));
+});
+
+app.post('/api/party/:partyId/settings', (req, res) => {
+  const { hostId, finalRoundType, finalSwapAllowLocked, maxSteals } = req.body;
+  const party = updateSettings(req.params.partyId, hostId, { finalRoundType, finalSwapAllowLocked, maxSteals });
+  if (!party) {
+    return res.status(400).json({ error: 'Cannot update settings' });
+  }
+  res.json(sanitizeParty(party));
+});
+
+app.post('/api/party/:partyId/swap', (req, res) => {
+  const { playerId, giftId } = req.body;
+  const party = swapGift(req.params.partyId, playerId, giftId);
+  if (!party) {
+    return res.status(400).json({ error: 'Cannot swap gift' });
+  }
+  res.json(sanitizeParty(party));
+});
+
+app.post('/api/party/:partyId/keep', (req, res) => {
+  const { playerId } = req.body;
+  const party = keepGift(req.params.partyId, playerId);
+  if (!party) {
+    return res.status(400).json({ error: 'Cannot keep gift' });
+  }
   res.json(sanitizeParty(party));
 });
 
